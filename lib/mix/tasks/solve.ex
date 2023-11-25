@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Solve do
   @moduledoc """
-    Solve the Advent of Code puzzle using the given `--year` and `--day` flags"
+    Solve the Advent of Code puzzle using the given `--year` and `--day` flags
   """
   @shortdoc "Solve an Advent of Code puzzle"
 

@@ -1,21 +1,26 @@
-# AdventOfCode
+# Advent of Code
 
 **TODO: Add description**
 
-## Installation
+## Usage
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `advent_of_code` to your list of dependencies in `mix.exs`:
+Run the solution for any year/day combination:
 
-```elixir
-def deps do
-  [
-    {:advent_of_code, "~> 0.1.0"}
-  ]
-end
+```bash
+$ mix solve -y 2015 -d 1
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/advent_of_code>.
+Generate a new Advent of Code puzzle:
+
+```bash
+$ mix gen -y 2015 -d 1 -t "Not Quite Lisp"
+```
+
+Run puzzle tests:
+
+```bash
+$ mix test                # run all tests
+$ mix test --exclude slow # run all tests excluding those marked with "slow" tag
+$ mix test test/2015/     # run only tests from 2015
+```
 

@@ -5,8 +5,8 @@ defmodule AdventOfCodeTest.Y2015.D11Test do
 
   @tag :slow
   test "part 1 examples" do
-    assert {"abcdffaa", nil} = Puzzle.run("abcdefgh")
-    assert {"ghjaabcc", nil} = Puzzle.run("ghijklmn")
+    assert {"abcdffaa", _} = Puzzle.run("abcdefgh")
+    assert {"ghjaabcc", _} = Puzzle.run("ghijklmn")
   end
 
   test "solution" do

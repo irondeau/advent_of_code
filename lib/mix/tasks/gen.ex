@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Gen do
   @moduledoc """
-    Generates source and test files for an Advent of Code puzzle using the given `--year`, `--day`, and `--title` flags"
+    Generates source and test files for an Advent of Code puzzle using the given `--year`, `--day`, and `--title` flags
   """
   @shortdoc "Generate an Advent of Code puzzle"
 
