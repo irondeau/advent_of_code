@@ -12,9 +12,9 @@ defmodule AdventOfCode.Y2023.D6 do
 
   @impl true
   def parse(input) do
-      input
-      |> String.replace(~r/[A-Za-z:]/, "")
-      |> String.split(~r/\R/)
+    input
+    |> String.replace(~r/[A-Za-z:]/, "")
+    |> String.split(~r/\R/)
   end
 
   defp solve_1(input) do
@@ -27,7 +27,7 @@ defmodule AdventOfCode.Y2023.D6 do
     |> Enum.zip()
     |> Enum.map(fn {time, record} ->
       quadratic(-1, time, -record)
-      |> then(fn [x1, x2] -> (floor(x2 - 0.0001) - ceil(x1 + 0.0001)) + 1 end)
+      |> then(fn [x1, x2] -> floor(x2 - 0.0001) - ceil(x1 + 0.0001) + 1 end)
     end)
     |> Enum.product()
   end
@@ -42,7 +42,7 @@ defmodule AdventOfCode.Y2023.D6 do
       end)
 
     quadratic(-1, time, -record)
-    |> then(fn [x1, x2] -> (floor(x2 - 0.0001) - ceil(x1 + 0.0001)) + 1 end)
+    |> then(fn [x1, x2] -> floor(x2 - 0.0001) - ceil(x1 + 0.0001) + 1 end)
   end
 
   defp quadratic(a, b, c) do
