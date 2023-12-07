@@ -26,8 +26,8 @@ defmodule AdventOfCode.Y2023.D6 do
     end)
     |> Enum.zip()
     |> Enum.map(fn {time, record} ->
-      quadratic(-1, time, -record)
-      |> then(fn [x1, x2] -> floor(x2 - 0.0001) - ceil(x1 + 0.0001) + 1 end)
+      quadratic(-1, time, -record - 1)
+      |> then(fn [x1, x2] -> floor(x2) - ceil(x1) + 1 end)
     end)
     |> Enum.product()
   end
@@ -41,8 +41,8 @@ defmodule AdventOfCode.Y2023.D6 do
         |> String.to_integer()
       end)
 
-    quadratic(-1, time, -record)
-    |> then(fn [x1, x2] -> floor(x2 - 0.0001) - ceil(x1 + 0.0001) + 1 end)
+    quadratic(-1, time, -record - 1)
+    |> then(fn [x1, x2] -> floor(x2) - ceil(x1) + 1 end)
   end
 
   defp quadratic(a, b, c) do
