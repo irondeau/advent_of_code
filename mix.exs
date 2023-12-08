@@ -5,7 +5,7 @@ defmodule AdventOfCode.MixProject do
     [
       app: :advent_of_code,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -20,6 +20,7 @@ defmodule AdventOfCode.MixProject do
   defp deps do
     [
       {:exla, "~> 0.5.3"},
+      {:libgraph, "~> 0.16.0"},
       {:nx, "~> 0.5.3"}
     ]
   end
