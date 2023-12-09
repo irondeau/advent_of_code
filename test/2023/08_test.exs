@@ -1,6 +1,8 @@
 defmodule AdventOfCodeTest.Y2023.D8Test do
   use ExUnit.Case, async: true
 
+  alias AdventOfCode.Y2023.D8, as: Puzzle
+
   @network_1 """
 RL
 
@@ -33,8 +35,6 @@ AAA = (22B, ZZZ)
 22Z = (22B, 22B)
 ZZZ = (ZZZ, ZZZ)
 """
-
-  alias AdventOfCode.Y2023.D8, as: Puzzle
 
   test "part 1 examples" do
     assert {2, _} = Puzzle.run(@network_1)
