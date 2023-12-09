@@ -1,6 +1,8 @@
 defmodule AdventOfCode.Y2023.D6 do
   use AdventOfCode.Puzzle, year: 2023, day: 6
 
+  import AdventOfCode.Helpers.Math
+
   @impl true
   def title, do: "Wait For It"
 
@@ -43,18 +45,5 @@ defmodule AdventOfCode.Y2023.D6 do
 
     quadratic(-1, time, -record - 1)
     |> then(fn [x1, x2] -> floor(x2) - ceil(x1) + 1 end)
-  end
-
-  defp quadratic(a, b, c) do
-    d = b**2 - 4 * a * c
-
-    if d >= 0 do
-      x1 = (-b + :math.sqrt(d)) / (2 * a)
-      x2 = (-b - :math.sqrt(d)) / (2 * a)
-
-      [x1, x2]
-    else
-      nil
-    end
   end
 end

@@ -13,7 +13,7 @@ defmodule AdventOfCode.Y2015.D8 do
   @impl true
   def parse(input) do
     input
-    |> String.split("\n")
+    |> String.split(~r/\R/)
   end
 
   defp solve_1(input) do
@@ -38,9 +38,7 @@ defmodule AdventOfCode.Y2015.D8 do
   defp memory_size("\\x" <> rest, acc), do: String.split_at(rest, 2) |> elem(1) |> memory_size(acc + 1)
   defp memory_size("\\" <> rest, acc), do: String.split_at(rest, 1) |> elem(1) |> memory_size(acc + 1)
   defp memory_size(rest, acc), do: String.split_at(rest, 1) |> elem(1) |> memory_size(acc + 1)
-  defp memory_size("\"" <> trimmed) do
-    memory_size(trimmed, 0)
-  end
+  defp memory_size("\"" <> trimmed), do: memory_size(trimmed, 0)
 
   defp encode_size(line) do
     line

@@ -46,6 +46,6 @@ ZZZ = (ZZZ, ZZZ)
   end
 
   test "solution" do
-    assert {16043, nil} = Puzzle.run()
+    assert {16043, 15726453850399} = Puzzle.run()
   end
 end
