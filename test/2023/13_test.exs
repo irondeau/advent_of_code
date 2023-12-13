@@ -26,6 +26,6 @@ defmodule AdventOfCodeTest.Y2023.D13Test do
   end
 
   test "solution" do
-    assert {30158, nil} = Puzzle.run()
+    assert {30158, 36474} = Puzzle.run()
   end
 end
