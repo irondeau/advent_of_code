@@ -28,6 +28,6 @@ hdj{m>838:A,pv}
   end
 
   test "solution" do
-    assert {446935, nil} = Puzzle.run()
+    assert {446935, 141882534122898} = Puzzle.run()
   end
 end

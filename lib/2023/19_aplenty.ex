@@ -52,13 +52,18 @@ defmodule AdventOfCode.Y2023.D19 do
   end
 
   defp solve_2({workflows, _parts}) do
-    part = %{"x" => [1..4000], "m" => [1..4000], "a" => [1..4000], "s" => [1..4000]}
+    part = %{"x" => 1..4000, "m" => 1..4000, "a" => 1..4000, "s" => 1..4000}
 
     workflows
     |> evaluate_2(part)
-    |> Map.values()
-    |> Enum.map(fn ranges -> Enum.map(ranges, &Range.size/1) |> Enum.sum() end)
-    |> Enum.product()
+    |> List.flatten()
+    |> Enum.map(fn part ->
+      part
+      |> Map.values()
+      |> Enum.map(&Range.size/1)
+      |> Enum.product()
+    end)
+    |> Enum.sum()
   end
 
   defp parse_rule("A"), do: {:else, :accept}
@@ -114,6 +119,43 @@ defmodule AdventOfCode.Y2023.D19 do
   end
 
   defp evaluate_2(workflows, part, workflow \\ "in") do
-    part
+    case Map.get(workflows, workflow) do
+      rules when is_list(rules) ->
+        rules
+        |> Enum.reduce_while({[], part}, fn rule, {acc, part} ->
+          case rule do
+            {:else, :accept} -> {:halt, [part | acc]}
+            {:else, :reject} -> {:halt, acc}
+            {:else, next_workflow} -> {:halt, [evaluate_2(workflows, part, next_workflow) | acc]}
+
+            {category, {ieq_fun, value, then}} ->
+              category_range = Map.get(part, category)
+              split_offset = if ieq_fun == &Kernel.>/2, do: 1, else: 0
+
+              [lower_part, upper_part] =
+                category_range
+                |> Range.split(value - category_range.first + split_offset)
+                |> Tuple.to_list()
+                |> Enum.map(fn range -> Map.put(part, category, range) end)
+
+              evaluate_fun = fn part ->
+                case then do
+                  :accept -> [part | acc]
+                  :reject -> acc
+                  next_workflow -> [evaluate_2(workflows, part, next_workflow) | acc]
+                end
+              end
+
+              if ieq_fun == &Kernel.>/2 do
+                {:cont, {evaluate_fun.(upper_part), lower_part}}
+              else
+                {:cont, {evaluate_fun.(lower_part), upper_part}}
+              end
+          end
+        end)
+
+      _ ->
+        raise ArgumentError
+    end
   end
 end
