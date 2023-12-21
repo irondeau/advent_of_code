@@ -24,11 +24,7 @@ broadcaster -> a
     assert {11687500, _} = Puzzle.run(@module_config_2)
   end
 
-  test "part 2 examples" do
-    assert {_, nil} = Puzzle.run("")
-  end
-
   test "solution" do
-    assert {nil, nil} = Puzzle.run()
+    assert {898557000, 238420328103151} = Puzzle.run()
   end
 end

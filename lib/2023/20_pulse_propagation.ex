@@ -1,6 +1,8 @@
 defmodule AdventOfCode.Y2023.D20 do
   use AdventOfCode.Puzzle, year: 2023, day: 20
 
+  import AdventOfCode.Helpers.Math
+
   @impl true
   def title, do: "Pulse Propagation"
 
@@ -61,8 +63,15 @@ defmodule AdventOfCode.Y2023.D20 do
     |> Enum.product()
   end
 
-  defp solve_2(_input) do
-    nil
+  defp solve_2(modules) do
+    modules
+    |> Map.filter(fn {key, _value} -> key in modules["broadcaster"][:dst] end)
+    |> Enum.map(fn module ->
+      build_chain(modules, module)
+      |> pad_leading_zeros()
+      |> :binary.decode_unsigned()
+    end)
+    |> lcm()
   end
 
   defp parse_module("broadcaster -> " <> dst), do: {"broadcaster", %{dst: String.split(dst, ", ")}}
@@ -118,5 +127,29 @@ defmodule AdventOfCode.Y2023.D20 do
 
       cycle(modules, next_batch, count)
     end
+  end
+
+  defp build_chain(modules, {key, %{dst: dst}}, acc \\ <<>>) do
+    modules = Map.drop(modules, [key])
+
+    dst_modules = Map.take(modules, dst)
+    next_flipflop = Enum.filter(dst_modules, fn {_key, %{type: type}} -> type == :flipflop end)
+    has_conjunction? = map_size(dst_modules) > 1
+
+    if length(next_flipflop) == 0 do
+      <<1::1, acc::bitstring>>
+    else
+      build_chain(
+        modules,
+        hd(next_flipflop),
+        if(has_conjunction?, do: <<1::1, acc::bitstring>>, else: <<0::1, acc::bitstring>>)
+      )
+    end
+  end
+
+  def pad_leading_zeros(bs) when is_binary(bs), do: bs
+  def pad_leading_zeros(bs) when is_bitstring(bs) do
+    pad_length = 8 - rem(bit_size(bs), 8)
+    <<0::size(pad_length), bs::bitstring>>
   end
 end
