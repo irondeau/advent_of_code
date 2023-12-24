@@ -70,8 +70,6 @@ defmodule AdventOfCode.Y2023.D24 do
             m1 = dy1 / dx1
             y_intersect = m1 * (x_intersect - x1) + y1
 
-            # pry()
-
             if x_intersect >= min and
                 x_intersect <= max and
                 y_intersect >= min and
