@@ -1,8 +1,6 @@
 defmodule AdventOfCode.Y2023.D24 do
   use AdventOfCode.Puzzle, year: 2023, day: 24
 
-  import IEx
-
   @impl true
   def title, do: "Never Tell Me The Odds"
 
@@ -33,63 +31,71 @@ defmodule AdventOfCode.Y2023.D24 do
           |> List.to_tuple()
         end)
       end)
+      |> Enum.map(fn [{x, y, z}, {dx, dy, dz}] ->
+        %{
+          x: x,
+          y: y,
+          z: z,
+          dx: dx,
+          dy: dy,
+          dz: dz
+        }
+      end)
 
     {hailstones, min, max}
   end
 
   defp solve_1({hailstones, min, max}) do
     hailstones
-    |> Enum.map(&point_slope_form/1)
     |> collisions(min, max)
     |> MapSet.size()
-    |> div(2)
   end
 
-  defp solve_2(_input) do
+  defp solve_2({_hailstones, _min, _max}) do
     nil
   end
 
   defp collisions(hailstones, min, max, collisions \\ MapSet.new())
   defp collisions([], _min, _max, collisions), do: collisions
 
-  defp collisions([h1 | hailstones], min, max, collisions) do
-    h2 =
+  defp collisions([%{x: x1, y: y1, dx: dx1, dy: dy1} = h1 | hailstones], min, max, collisions) do
+    collisions =
       hailstones
-      |> Enum.find(fn {m, x, y} = h2 ->
+      |> Enum.reduce(collisions, fn %{x: x2, dx: dx2} = h2, collisions ->
         case intersect([h1, h2]) do
           nil ->
-            false
+            collisions
 
           x_intersect ->
-            y_intersect = m * (x_intersect - x) + y
+            m1 = dy1 / dx1
+            y_intersect = m1 * (x_intersect - x1) + y1
 
-            x_intersect >= min and
-              x_intersect <= max and
-              y_intersect >= min and
-              y_intersect <= max
+            # pry()
+
+            if x_intersect >= min and
+                x_intersect <= max and
+                y_intersect >= min and
+                y_intersect <= max and
+                dx1 > 0 == x_intersect > x1 and
+                dx2 > 0 == x_intersect > x2 do
+              MapSet.put(collisions, {h1, h2})
+            else
+              collisions
+            end
         end
       end)
 
-    if h2 == nil do
-      collisions(hailstones, min, max, collisions)
-    else
-      collisions(hailstones |> List.delete(h2), min, max, MapSet.union(collisions, MapSet.new([h1, h2])))
-    end
+    collisions(hailstones, min, max, collisions)
   end
 
-  defp intersect([{m1, x1, y1}, {m2, x2, y2}]) do
+  defp intersect([%{x: x1, y: y1, dx: dx1, dy: dy1}, %{x: x2, y: y2, dx: dx2, dy: dy2}]) do
+    m1 = dy1 / dx1
+    m2 = dy2 / dx2
+
     if m1 == m2 do
       nil
     else
       (x1 * m1 - x2 * m2 + y2 - y1) / (m1 - m2)
-    end
-  end
-
-  defp point_slope_form([{px, py, _pz}, {vx, vy, _vz}], opts \\ []) do
-    if Keyword.get(opts, :dim) == 3 do
-      nil
-    else
-      {vy / vx, px, py}
     end
   end
 end

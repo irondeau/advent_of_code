@@ -36,4 +36,9 @@ defmodule AdventOfCode.Helpers.Math do
         nil
     end
   end
+
+  @spec pythagorean({number(), number()}, {number(), number()}) :: number()
+  def pythagorean({x1, y1}, {x2, y2}) do
+    :math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+  end
 end

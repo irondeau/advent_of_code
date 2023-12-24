@@ -12,15 +12,11 @@ defmodule AdventOfCodeTest.Y2023.D24Test do
 20, 19, 15 @  1, -5, -3
 """
 
-  test "part 1 examples" do
-    assert {2, _} = Puzzle.run(@hailstones)
-  end
-
-  test "part 2 examples" do
-    assert {_, nil} = Puzzle.run("")
+  test "examples" do
+    assert {2, 47} = Puzzle.run(@hailstones)
   end
 
   test "solution" do
-    assert {nil, nil} = Puzzle.run()
+    assert {25433, nil} = Puzzle.run()
   end
 end
