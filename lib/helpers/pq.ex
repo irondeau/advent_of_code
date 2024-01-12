@@ -6,15 +6,12 @@ defmodule AdventOfCode.Helpers.PQ do
   @typedoc "A binomial tree node containing an item and a priority."
   @type tree_node :: {term(), number()}
 
-  @typedoc "A binomial tree."
-  @type tree :: {tree_node(), [tree()]}
-
   @typedoc "A binomial tree rank."
   @type rank :: non_neg_integer()
 
   @typedoc "A ranked binomial tree."
   @type ranked_tree :: %{
-    tree: tree(),
+    tree: {tree_node(), [ranked_tree()]},
     rank: rank()
   }
 
@@ -49,9 +46,8 @@ defmodule AdventOfCode.Helpers.PQ do
 
   def peek(%PQ{forest: forest}, _default) do
     forest
-    |> Enum.sort_by(&root_priority/1, :asc)
-    |> List.first()
-    |> get_in([Access.key(:tree), Access.elem(0), Access.elem(0)])
+    |> Enum.min_by(&root_priority/1)
+    |> root_item()
   end
 
   @spec pop(t()) :: {term(), t()}
@@ -59,30 +55,40 @@ defmodule AdventOfCode.Helpers.PQ do
   def pop(%PQ{forest: []} = pq, default), do: {default, pq}
 
   def pop(%PQ{forest: forest} = pq, _default) do
-    rt_min_idx =
+    {%{tree: {{min_item, _}, min_children}}, min_idx} =
       forest
       |> Enum.with_index()
-      |> Enum.sort_by(&(elem(&1, 0) |> root_priority()), :asc)
-      |> List.first()
-      |> elem(1)
+      |> Enum.min_by(&(elem(&1, 0) |> root_priority()))
 
-    {%{tree: {{rt_min_item, _}, rt_min_children}}, rt_rest} =
-      List.pop_at(forest, rt_min_idx)
+    {min_singletons, min_rest} =
+      min_children
+      |> Enum.split_with(fn child -> child.rank == 0 end)
 
     forest =
-      rt_min_children
-      |> Enum.reverse()
-      |> Enum.with_index()
-      |> Enum.map(fn {tree, i} -> %{tree: tree, rank: i} end)
-      |> meld(rt_rest)
+      forest
+      |> List.delete_at(min_idx)
+      |> meld(min_rest)
 
-    {rt_min_item,
-     %{pq | forest: forest}}
+    pq =
+      min_singletons
+      |> Enum.reduce(%{pq | forest: forest}, fn %{tree: {{item, priority}, []}}, pq ->
+        push(pq, item, priority)
+      end)
+
+    {min_item, pq}
   end
 
   @spec push(t(), term(), number()) :: t()
+  def push(%PQ{forest: [rt_1 | [rt_2 | rest]] = forest} = pq, item, priority) do
+    if rt_1.rank == rt_2.rank do
+      %{pq | forest: [skew_link(singleton(item, priority), rt_1, rt_2) | rest]}
+    else
+      %{pq | forest: [singleton(item, priority) | forest]}
+    end
+  end
+
   def push(%PQ{forest: forest} = pq, item, priority) do
-    %{pq | forest: ins(forest, singleton(item, priority))}
+    %{pq | forest: [singleton(item, priority) | forest]}
   end
 
   @spec size(t()) :: non_neg_integer()
@@ -94,13 +100,31 @@ defmodule AdventOfCode.Helpers.PQ do
 
   defp singleton(item, priority), do: %{tree: {{item, priority}, []}, rank: 0}
 
-  def link(
-      %{tree: {rt_root_1, rt_children_1} = rt_tree_1, rank: rt_rank_1},
-      %{tree: {rt_root_2, rt_children_2} = rt_tree_2, rank: rt_rank_2}) do
-    if elem(rt_root_1, 1) <= elem(rt_root_2, 1) do
-      %{tree: {rt_root_1, [rt_tree_2 | rt_children_1]}, rank: rt_rank_1 + 1}
+  defp link(
+      %{tree: {rt_root_1, rt_children_1}, rank: rt_rank_1} = rt_1,
+      %{tree: {rt_root_2, rt_children_2}, rank: rt_rank_2} = rt_2) do
+    if root_priority(rt_1) <= root_priority(rt_2) do
+      %{tree: {rt_root_1, [rt_2 | rt_children_1]}, rank: rt_rank_1 + 1}
     else
-      %{tree: {rt_root_2, [rt_tree_1 | rt_children_2]}, rank: rt_rank_2 + 1}
+      %{tree: {rt_root_2, [rt_1 | rt_children_2]}, rank: rt_rank_2 + 1}
+    end
+  end
+
+  defp skew_link(
+      %{tree: {rt_root_0, _}} = rt_0,
+      %{tree: {rt_root_1, rt_children_1}, rank: rt_rank_1} = rt_1,
+      %{tree: {rt_root_2, rt_children_2}, rank: rt_rank_2} = rt_2) do
+    cond do
+      root_priority(rt_1) <= root_priority(rt_0) and
+          root_priority(rt_1) <= root_priority(rt_2) ->
+        %{tree: {rt_root_1, [rt_0 | [rt_2 | rt_children_1]]}, rank: rt_rank_1 + 1}
+
+      root_priority(rt_2) <= root_priority(rt_0) and
+          root_priority(rt_2) <= root_priority(rt_1) ->
+        %{tree: {rt_root_2, [rt_0 | [rt_1 | rt_children_2]]}, rank: rt_rank_2 + 1}
+
+      true ->
+        %{tree: {rt_root_0, [rt_1 | [rt_2 | []]]}, rank: rt_rank_1 + 1}
     end
   end
 
@@ -117,20 +141,34 @@ defmodule AdventOfCode.Helpers.PQ do
     end
   end
 
-  def meld([], forest), do: forest
-  def meld(forest, []), do: forest
+  defp uniquify([]), do: []
+  defp uniquify([ranked_tree | forest]), do: ins(forest, ranked_tree)
 
-  def meld([rt_1 | rt_rest_1] = forest_1, [rt_2 | rt_rest_2] = forest_2) do
+  defp meld_unique([], forest), do: forest
+  defp meld_unique(forest, []), do: forest
+
+  defp meld_unique([rt_1 | rt_rest_1] = forest_1, [rt_2 | rt_rest_2] = forest_2) do
     cond do
       rt_1.rank < rt_2.rank ->
-        [rt_1 | meld(rt_rest_1, forest_2)]
+        [rt_1 | meld_unique(rt_rest_1, forest_2)]
 
       rt_2.rank < rt_1.rank ->
-        [rt_2 | meld(forest_1, rt_rest_2)]
+        [rt_2 | meld_unique(forest_1, rt_rest_2)]
 
       true ->
-        ins(meld(rt_rest_1, rt_rest_2), link(rt_1, rt_2))
+        ins(meld_unique(rt_rest_1, rt_rest_2), link(rt_1, rt_2))
     end
+  end
+
+  defp meld(forest_1, forest_2), do: meld_unique(uniquify(forest_1), uniquify(forest_2))
+
+  defp root_item(ranked_tree) do
+    ranked_tree
+    |> get_in([
+      Access.key(:tree),
+      Access.elem(0),
+      Access.elem(0)
+    ])
   end
 
   defp root_priority(ranked_tree) do
