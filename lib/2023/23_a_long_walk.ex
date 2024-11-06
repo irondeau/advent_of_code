@@ -2,7 +2,7 @@ defmodule AdventOfCode.Y2023.D23 do
   use AdventOfCode.Puzzle, year: 2023, day: 23
 
   require IEx
-  alias AdventOfCode.Helpers.{DirectedGraph, Graph.Edge, UndirectedGraph}
+  alias AdventOfCode.Helpers.DirectedGraph
 
   @impl true
   def title, do: "A Long Walk"

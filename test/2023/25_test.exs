@@ -24,7 +24,7 @@ frs: qnr lhk lsr
   end
 
   test "part 2 examples" do
-    assert {_, nil} = Puzzle.run("")
+    assert {_, nil} = Puzzle.run()
   end
 
   test "solution" do

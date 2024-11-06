@@ -51,8 +51,81 @@ defmodule AdventOfCode.Y2023.D24 do
     |> MapSet.size()
   end
 
-  defp solve_2({_hailstones, _min, _max}) do
-    nil
+  defp solve_2({hailstones, _min, _max}) do
+    hs =
+      [:a, :b, :c]
+      |> Enum.zip(Enum.take(hailstones, 3))
+      |> Enum.into(%{})
+
+    a =
+      [
+        [
+          -(hs.a.dy - hs.b.dy),
+          hs.a.dx - hs.b.dx,
+          0,
+          hs.a.y - hs.b.y,
+          -(hs.a.x - hs.b.x),
+          0
+        ],
+        [
+          -(hs.a.dy - hs.c.dy),
+          hs.a.dx - hs.c.dx,
+          0,
+          hs.a.y - hs.c.y,
+          -(hs.a.x - hs.c.x),
+          0
+        ],
+        [
+          0,
+          -(hs.a.dz - hs.b.dz),
+          hs.a.dy - hs.b.dy,
+          0,
+          hs.a.z - hs.b.z,
+          -(hs.a.y - hs.b.y)
+        ],
+        [
+          0,
+          -(hs.a.dz - hs.c.dz),
+          hs.a.dy - hs.c.dy,
+          0,
+          hs.a.z - hs.c.z,
+          -(hs.a.y - hs.c.y)
+        ],
+        [
+          -(hs.a.dz - hs.b.dz),
+          0,
+          hs.a.dx - hs.b.dx,
+          hs.a.z - hs.b.z,
+          0,
+          -(hs.a.x - hs.b.x)
+        ],
+        [
+          -(hs.a.dz - hs.c.dz),
+          0,
+          hs.a.dx - hs.c.dx,
+          hs.a.z - hs.c.z,
+          0,
+          -(hs.a.x - hs.c.x)
+        ]
+      ]
+      |> Nx.tensor()
+
+    b =
+      [
+        (hs.a.y * hs.a.dx - hs.b.y * hs.b.dx) - (hs.a.x * hs.a.dy - hs.b.x * hs.b.dy),
+        (hs.a.y * hs.a.dx - hs.c.y * hs.c.dx) - (hs.a.x * hs.a.dy - hs.c.x * hs.c.dy),
+        (hs.a.z * hs.a.dy - hs.b.z * hs.b.dy) - (hs.a.y * hs.a.dz - hs.b.y * hs.b.dz),
+        (hs.a.z * hs.a.dy - hs.c.z * hs.c.dy) - (hs.a.y * hs.a.dz - hs.c.y * hs.c.dz),
+        (hs.a.z * hs.a.dx - hs.b.z * hs.b.dx) - (hs.a.x * hs.a.dz - hs.b.x * hs.b.dz),
+        (hs.a.z * hs.a.dx - hs.c.z * hs.c.dx) - (hs.a.x * hs.a.dz - hs.c.x * hs.c.dz)
+      ]
+      |> Nx.tensor()
+
+    [x, y, z, _dx, _dy, _dz] =
+      Nx.LinAlg.solve(a, b)
+      |> Nx.to_list()
+
+    round(x + y + z)
   end
 
   defp collisions(hailstones, min, max, collisions \\ MapSet.new())

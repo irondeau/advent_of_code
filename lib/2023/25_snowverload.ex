@@ -1,6 +1,9 @@
 defmodule AdventOfCode.Y2023.D25 do
   use AdventOfCode.Puzzle, year: 2023, day: 25
 
+  alias AdventOfCode.Helpers.UndirectedGraph
+  import IEx
+
   @impl true
   def title, do: "Snowverload"
 
@@ -14,17 +17,13 @@ defmodule AdventOfCode.Y2023.D25 do
   def parse(input) do
     input
     |> String.split(~r/\R/)
-    |> Enum.reduce(Graph.new(type: :undirected), fn line, graph ->
+    |> Enum.reduce(UndirectedGraph.new(), fn line, graph ->
       [from, rest] = String.split(line, ": ")
-
-      graph = Graph.add_vertex(graph, from)
 
       rest
       |> String.split()
       |> Enum.reduce(graph, fn to, graph ->
-        graph
-        |> Graph.add_vertex(to)
-        |> Graph.add_edge(from, to)
+        UndirectedGraph.add_edge(graph, from, to)
       end)
     end)
   end
@@ -43,12 +42,15 @@ defmodule AdventOfCode.Y2023.D25 do
 
   defp disconnect(graph) do
     graph
-    |> Graph.edges()
+    |> UndirectedGraph.edges()
+    |> Map.keys()
     |> combinations()
     |> Enum.reduce_while(nil, fn edges, _ ->
-      graph = Graph.delete_edges(graph, edges)
+      graph = UndirectedGraph.delete_edges(graph, edges)
 
-      case Graph.components(graph) |> length() do
+      # TODO: Implement components function. This probably won't be enough for the final solution
+
+      case UndirectedGraph.components(graph) |> length() do
         2 -> {:halt, graph}
         _ -> {:cont, nil}
       end
