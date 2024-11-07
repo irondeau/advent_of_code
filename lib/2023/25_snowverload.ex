@@ -8,9 +8,27 @@ defmodule AdventOfCode.Y2023.D25 do
   def title, do: "Snowverload"
 
   @impl true
-  def solve(input) do
-    input
-    |> then(&({solve_1(&1), solve_2(&1)}))
+  def solve(graph) do
+    vertices = UndirectedGraph.vertices(graph)
+
+    0..round(length(vertices) / 2)
+    |> Enum.flat_map(fn _ ->
+      [a, b] = Enum.take_random(vertices, 2)
+      graph
+      |> UndirectedGraph.dijkstra(a, b)
+      |> Map.keys()
+    end)
+    |> Enum.frequencies()
+    |> Enum.sort_by(fn {_, freq} -> freq end, :desc)
+    |> Enum.map(&(elem(&1, 0)))
+    |> Enum.take(3)
+    |> then(fn cut_edges ->
+      graph
+      |> UndirectedGraph.delete_edges(cut_edges)
+      |> UndirectedGraph.components()
+      |> Enum.map(&length/1)
+      |> Enum.product()
+    end)
   end
 
   @impl true
@@ -26,40 +44,5 @@ defmodule AdventOfCode.Y2023.D25 do
         UndirectedGraph.add_edge(graph, from, to)
       end)
     end)
-  end
-
-  defp solve_1(graph) do
-    graph
-    |> disconnect()
-    |> Graph.components()
-    |> Enum.map(&length/1)
-    |> Enum.product()
-  end
-
-  defp solve_2(_input) do
-    nil
-  end
-
-  defp disconnect(graph) do
-    graph
-    |> UndirectedGraph.edges()
-    |> Map.keys()
-    |> combinations()
-    |> Enum.reduce_while(nil, fn edges, _ ->
-      graph = UndirectedGraph.delete_edges(graph, edges)
-
-      # TODO: Implement components function. This probably won't be enough for the final solution
-
-      case UndirectedGraph.components(graph) |> length() do
-        2 -> {:halt, graph}
-        _ -> {:cont, nil}
-      end
-    end)
-  end
-
-  defp combinations(edges) do
-    for a <- edges, b <- edges, c <- edges, a != b and b != c do
-      [a, b, c]
-    end
   end
 end

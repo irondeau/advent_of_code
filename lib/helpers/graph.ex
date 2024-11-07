@@ -26,7 +26,8 @@ defmodule GraphBehaviour do
   @callback delete_edge(graph(), Reference.t()) :: graph()
   @callback delete_edges(graph(), [Reference.t()]) :: graph()
 
-  @callback get_paths(graph()) :: [[edge_map()]]
+  @callback dijkstra(graph(), vertex(), vertex()) :: [edge_map()]
+  @callback get_paths(graph(), vertex(), vertex()) :: [[edge_map()]]
 end
 
 defmodule AdventOfCode.Helpers.Graph do
