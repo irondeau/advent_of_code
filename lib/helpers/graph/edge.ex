@@ -17,7 +17,7 @@ defmodule AdventOfCode.Helpers.Graph.Edge do
     %Edge{
       v1: v1,
       v2: v2,
-      weight: Keyword.get(opts, :weight, 1)
     }
+    |> Map.merge(Enum.into(opts, %{}))
   end
 end

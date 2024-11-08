@@ -1,6 +1,8 @@
 defmodule AdventOfCode.Y2023.D10 do
   use AdventOfCode.Puzzle, year: 2023, day: 10
 
+  # TODO: Replace graph library with custom implementation
+  alias AdventOfCode.Helpers.DirectedGraph
   alias Graph.Edge
 
   @impl true

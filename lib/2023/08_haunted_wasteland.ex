@@ -3,7 +3,7 @@ defmodule AdventOfCode.Y2023.D8 do
 
   import AdventOfCode.Helpers.Math
 
-  alias Graph.Edge
+  alias AdventOfCode.Helpers.DirectedGraph
 
   @impl true
   def title, do: "Haunted Wasteland"
@@ -19,20 +19,14 @@ defmodule AdventOfCode.Y2023.D8 do
     [instr, network] = String.split(input, ~r/\R\R/, parts: 2)
 
     graph =
-      Graph.new()
-      |> Graph.add_edges(
-        network
-        |> String.split(~r/\R/)
-        |> Enum.map(fn path ->
-          [node, left, right] = String.split(path, ~r/[=(,) ]+/, trim: true)
-
-          [
-            Edge.new(node, left, label: :left),
-            Edge.new(node, right, label: :right)
-          ]
-        end)
-        |> List.flatten()
-      )
+      network
+      |> String.split(~r/\R/)
+      |> Enum.map(&String.split(&1, ~r/[=(,) ]+/, trim: true))
+      |> Enum.reduce(DirectedGraph.new(), fn [node, left, right], graph ->
+        graph
+        |> DirectedGraph.add_edge(node, left, label: :left)
+        |> DirectedGraph.add_edge(node, right, label: :right)
+      end)
 
     instr =
       instr
@@ -48,7 +42,7 @@ defmodule AdventOfCode.Y2023.D8 do
 
   defp solve_2({graph, instr}) do
     graph
-    |> Graph.vertices()
+    |> DirectedGraph.vertices()
     |> Enum.filter(&(String.last(&1) == "A"))
     |> Enum.map(fn node ->
       traverse_2(graph, instr, node)
@@ -63,9 +57,9 @@ defmodule AdventOfCode.Y2023.D8 do
     node =
       Enum.reduce(instr, node, fn direction, current_node ->
         graph
-        |> Graph.out_edges(current_node)
-        |> Enum.find(fn %Edge{label: label} -> label == direction end)
-        |> then(&(&1.v2))
+        |> DirectedGraph.out_edges(current_node)
+        |> Enum.find(fn {_, edge} -> edge.label == direction end)
+        |> then(fn {_, edge} -> edge.v2 end)
       end)
 
     traverse_1(graph, instr, node, acc + length(instr))
@@ -78,9 +72,9 @@ defmodule AdventOfCode.Y2023.D8 do
       node =
         Enum.reduce(instr, node, fn direction, current_node ->
           graph
-          |> Graph.out_edges(current_node)
-          |> Enum.find(fn %Edge{label: label} -> label == direction end)
-          |> then(&(&1.v2))
+          |> DirectedGraph.out_edges(current_node)
+          |> Enum.find(fn {_, edge} -> edge.label == direction end)
+          |> then(fn {_, edge} -> edge.v2 end)
         end)
 
       traverse_2(graph, instr, node, acc + length(instr))

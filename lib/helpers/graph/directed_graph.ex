@@ -4,17 +4,20 @@ defmodule AdventOfCode.Helpers.DirectedGraph do
   use AdventOfCode.Helpers.Graph
 
   @impl true
-  def get_paths(%DirectedGraph{} = graph, start, stop) do
-    get_paths(graph, stop, [{start, %{}}], [])
+  def dijkstra(%DirectedGraph{} = _graph, _v1, _v2), do: raise UndefinedFunctionError
+
+  @impl true
+  def get_paths(%DirectedGraph{} = graph, v1, v2) do
+    get_paths(graph, v2, [{v1, %{}}], [])
   end
 
-  defp get_paths(%DirectedGraph{}, _stop, [], paths), do: paths
+  defp get_paths(%DirectedGraph{}, _v2, [], paths), do: paths
 
-  defp get_paths(%DirectedGraph{} = graph, stop, [{current, visited} | unvisited], paths) when current == stop do
-    get_paths(graph, stop, unvisited, [visited | paths])
+  defp get_paths(%DirectedGraph{} = graph, v2, [{current, visited} | unvisited], paths) when current == v2 do
+    get_paths(graph, v2, unvisited, [visited | paths])
   end
 
-  defp get_paths(%DirectedGraph{} = graph, stop, [{current, visited} | unvisited], paths) do
+  defp get_paths(%DirectedGraph{} = graph, v2, [{current, visited} | unvisited], paths) do
     DirectedGraph.out_edges(graph, current)
     |> Map.reject(fn {_, edge} ->
       Enum.any?(visited, fn {_, visited_edge} ->
@@ -25,7 +28,7 @@ defmodule AdventOfCode.Helpers.DirectedGraph do
       {edge.v2, Map.put(visited, ref, edge)}
     end)
     |> then(fn to_visit ->
-      get_paths(graph, stop, to_visit ++ unvisited, paths)
+      get_paths(graph, v2, to_visit ++ unvisited, paths)
     end)
   end
 

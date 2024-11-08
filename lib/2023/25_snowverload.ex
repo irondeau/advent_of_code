@@ -2,7 +2,6 @@ defmodule AdventOfCode.Y2023.D25 do
   use AdventOfCode.Puzzle, year: 2023, day: 25
 
   alias AdventOfCode.Helpers.UndirectedGraph
-  import IEx
 
   @impl true
   def title, do: "Snowverload"

@@ -14,7 +14,6 @@ defmodule GraphBehaviour do
   @callback edges(graph()) :: edge_map()
   @callback edges(graph(), vertex()) :: edge_map()
   @callback edges(graph(), vertex(), vertex()) :: edge_map()
-  @callback neighbors(graph(), vertex()) :: [vertex()]
 
   @callback add_vertex(graph(), vertex()) :: graph()
   @callback add_vertices(graph(), [vertex()]) :: graph()
@@ -25,6 +24,11 @@ defmodule GraphBehaviour do
   @callback add_edges(graph(), [{vertex(), vertex(), Keyword.t()}], Keyword.t()) :: graph()
   @callback delete_edge(graph(), Reference.t()) :: graph()
   @callback delete_edges(graph(), [Reference.t()]) :: graph()
+
+  @callback components(graph()) :: [[vertex()]]
+  @callback connected(graph(), vertex()) :: graph()
+  @callback neighbors(graph(), vertex()) :: [vertex()]
+  @callback subgraph(graph(), [vertex()]) :: graph()
 
   @callback dijkstra(graph(), vertex(), vertex()) :: [edge_map()]
   @callback get_paths(graph(), vertex(), vertex()) :: [[edge_map()]]
@@ -59,16 +63,6 @@ defmodule AdventOfCode.Helpers.Graph do
         Map.filter(graph.edges, fn {_, edge} ->
           (edge.v1 == v1 and edge.v2 == v2) or (edge.v1 == v2 and edge.v2 == v1)
         end)
-      end
-
-      def neighbors(%__MODULE__{} = graph, vertex) do
-        graph
-        |> edges(vertex)
-        |> Enum.flat_map(fn {_, %Edge{v1: v1, v2: v2}} ->
-          [v1, v2]
-        end)
-        |> Enum.uniq()
-        |> Enum.reject(& &1 == vertex)
       end
 
       def add_vertex(%__MODULE__{} = graph, vertex) do
@@ -125,6 +119,52 @@ defmodule AdventOfCode.Helpers.Graph do
         %{graph | edges: Map.reject(graph.edges, fn {_, edge} ->
           edge.v1 == vertex or edge.v2 == vertex
         end)}
+      end
+
+      def components(%__MODULE__{} = graph), do: components(graph, __MODULE__.vertices(graph), [])
+
+      defp components(%__MODULE__{}, [], components), do: components
+
+      defp components(%__MODULE__{} = graph, [vertex | unvisited], components) do
+        connected = __MODULE__.connected(graph, vertex)
+
+        unvisited =
+          MapSet.difference(MapSet.new(unvisited), connected.vertices)
+          |> MapSet.to_list()
+
+        components(graph, unvisited, [__MODULE__.vertices(connected) | components])
+      end
+
+      def connected(%__MODULE__{} = graph, vertex), do: connected(graph, [vertex], MapSet.new())
+
+      defp connected(%__MODULE__{} = graph, [], visited) do
+        __MODULE__.subgraph(graph, MapSet.to_list(visited))
+      end
+
+      defp connected(%__MODULE__{} = graph, [vertex | unvisited], visited) do
+        unvisited =
+          __MODULE__.neighbors(graph, vertex)
+          |> MapSet.new()
+          |> MapSet.difference(visited)
+          |> MapSet.to_list()
+          |> Enum.concat(unvisited)
+          |> Enum.uniq()
+
+        connected(graph, unvisited, MapSet.put(visited, vertex))
+      end
+
+      def neighbors(%__MODULE__{} = graph, vertex) do
+        __MODULE__.edges(graph, vertex)
+        |> Enum.flat_map(fn {_, edge} -> [edge.v1, edge.v2] end)
+        |> Enum.uniq()
+        |> Enum.reject(& &1 == vertex)
+      end
+
+      def subgraph(%__MODULE__{} = graph, vertices) when is_list(vertices) do
+        graph.vertices
+        |> MapSet.difference(MapSet.new(vertices))
+        |> MapSet.to_list()
+        |> then(&__MODULE__.delete_vertices(graph, &1))
       end
 
       defoverridable GraphBehaviour
