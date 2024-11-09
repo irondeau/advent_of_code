@@ -68,7 +68,6 @@ L7JLJL-JLJLJL--JLJ.L
     assert {_, 10} = Puzzle.run(@grouped_loop)
   end
 
-  @tag :slow
   test "solution" do
     assert {6725, 383} = Puzzle.run()
   end

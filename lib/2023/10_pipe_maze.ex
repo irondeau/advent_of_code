@@ -1,10 +1,6 @@
 defmodule AdventOfCode.Y2023.D10 do
   use AdventOfCode.Puzzle, year: 2023, day: 10
 
-  # TODO: Replace graph library with custom implementation
-  alias AdventOfCode.Helpers.DirectedGraph
-  alias Graph.Edge
-
   @impl true
   def title, do: "Pipe Maze"
 
@@ -18,137 +14,127 @@ defmodule AdventOfCode.Y2023.D10 do
   def parse(input) do
     lines = String.split(input, ~r/\R/)
 
-    {graph, start} =
+    graph = :digraph.new()
+
+    start =
       lines
       |> Enum.with_index()
-      |> Enum.reduce({Graph.new(), nil}, fn {line, y}, acc ->
+      |> Enum.reduce(nil, fn {line, y}, start ->
         line
         |> String.graphemes()
         |> Enum.with_index()
-        |> Enum.reduce(acc, fn {char, x}, {graph, start} ->
-          cond do
-            char == "S" ->
-              {graph, {x, y}}
+        |> Enum.reduce(start, fn {char, x}, start ->
+          case char do
+            "." -> start
+            "S" -> {x, y}
+            char ->
+              :digraph.add_vertex(graph, {x, y}, to_label(char))
 
-            char != "." ->
-              graph =
-                graph
-                |> Graph.add_vertex({x, y})
-                |> Graph.label_vertex({x, y}, to_label(char))
-                |> Graph.add_edges(edges_for(char, {x, y}))
+              neighbors_for(char, {x, y})
+              |> Enum.each(fn neighbor ->
+                if :digraph.vertex(graph, neighbor) == false do
+                  :digraph.add_vertex(graph, neighbor)
+                end
 
-              {graph, start}
+                :digraph.add_edge(graph, {x, y}, neighbor)
+              end)
 
-            true ->
-              {graph, start}
+              start
           end
         end)
       end)
 
+    add_start_vertex(graph, start)
+
     size_x = hd(lines) |> String.length()
     size_y = length(lines)
 
-    {add_start_vertex(graph, start), start, {size_x, size_y}}
+    {graph, start, {size_x, size_y}}
   end
 
   defp solve_1({graph, start, _size}) do
-    Graph.get_paths(graph, start, start)
-    |> Enum.map(&length/1)
-    |> Enum.max()
-    |> then(&(div(&1, 2)))
+    :digraph.get_cycle(graph, start)
+    |> length()
+    |> div(2)
   end
 
   defp solve_2({graph, start, {size_x, size_y}}) do
-    path = Graph.get_paths(graph, start, start) |> hd()
-    loop = Graph.subgraph(graph, [start | path])
-    loop_vertices = Graph.vertices(loop)
+    path = :digraph.get_cycle(graph, start) |> tl()
 
-    all_tiles =
+    empty_tiles =
       for y <- 0..size_y,
           x <- 0..size_x do
         {x, y}
       end
-
-    empty_tiles = Enum.filter(all_tiles, &(&1 not in loop_vertices))
+      |> Enum.reject(&(&1 in path))
 
     empty_tiles
     |> Enum.filter(fn {tile_x, tile_y} ->
-      loop_vertices
+      path
       |> Enum.filter(fn {x, y} ->
         y == tile_y && x < tile_x
       end)
-      |> Enum.sort_by(&(elem(&1, 0)), :asc)
+      |> Enum.sort_by(&elem(&1, 0), :asc)
       |> Enum.reduce({0, []}, fn vertex, {count, prev_corners} ->
-        case Graph.vertex_labels(loop, vertex) |> hd() do
-          :updown -> {count + 1, prev_corners}
-          :leftright -> {count, prev_corners}
-          :upright -> {count, [:upright | prev_corners]}
-          :downright -> {count, [:downright | prev_corners]}
-          :upleft ->
-            if hd(prev_corners) == :downright do
+        {_, label} = :digraph.vertex(graph, vertex)
+        cond do
+          MapSet.equal?(label, to_label("|")) -> {count + 1, prev_corners}
+          MapSet.equal?(label, to_label("-")) -> {count, prev_corners}
+          MapSet.equal?(label, to_label("J")) ->
+            if MapSet.equal?(hd(prev_corners), to_label("F")) do
               {count + 1, tl(prev_corners)}
             else
               {count, tl(prev_corners)}
             end
-          :downleft ->
-            if hd(prev_corners) == :upright do
+          MapSet.equal?(label, to_label("7")) ->
+            if MapSet.equal?(hd(prev_corners), to_label("L")) do
               {count + 1, tl(prev_corners)}
             else
               {count, tl(prev_corners)}
             end
+          true ->
+            {count, [label | prev_corners]}
         end
       end)
       |> elem(0)
-      |> then(&(rem(&1, 2) == 1))
+      |> rem(2)
+      |> Kernel.==(1)
     end)
     |> Enum.count()
   end
 
-  defp to_label("|"), do: :updown
-  defp to_label("-"), do: :leftright
-  defp to_label("L"), do: :upright
-  defp to_label("J"), do: :upleft
-  defp to_label("7"), do: :downleft
-  defp to_label("F"), do: :downright
+  defp to_label("|"), do: MapSet.new([:up, :down])
+  defp to_label("-"), do: MapSet.new([:left, :right])
+  defp to_label("L"), do: MapSet.new([:up, :right])
+  defp to_label("J"), do: MapSet.new([:up, :left])
+  defp to_label("7"), do: MapSet.new([:down, :left])
+  defp to_label("F"), do: MapSet.new([:down, :right])
 
-  defp edges_for("|", {x, y} = coord), do: [Edge.new(coord, {x, y - 1}), Edge.new(coord, {x, y + 1})]
-  defp edges_for("-", {x, y} = coord), do: [Edge.new(coord, {x - 1, y}), Edge.new(coord, {x + 1, y})]
-  defp edges_for("L", {x, y} = coord), do: [Edge.new(coord, {x + 1, y}), Edge.new(coord, {x, y - 1})]
-  defp edges_for("J", {x, y} = coord), do: [Edge.new(coord, {x - 1, y}), Edge.new(coord, {x, y - 1})]
-  defp edges_for("7", {x, y} = coord), do: [Edge.new(coord, {x - 1, y}), Edge.new(coord, {x, y + 1})]
-  defp edges_for("F", {x, y} = coord), do: [Edge.new(coord, {x + 1, y}), Edge.new(coord, {x, y + 1})]
+  defp neighbors_for("|", {x, y}), do: [{x, y - 1}, {x, y + 1}]
+  defp neighbors_for("-", {x, y}), do: [{x - 1, y}, {x + 1, y}]
+  defp neighbors_for("L", {x, y}), do: [{x + 1, y}, {x, y - 1}]
+  defp neighbors_for("J", {x, y}), do: [{x - 1, y}, {x, y - 1}]
+  defp neighbors_for("7", {x, y}), do: [{x - 1, y}, {x, y + 1}]
+  defp neighbors_for("F", {x, y}), do: [{x + 1, y}, {x, y + 1}]
 
-  defp add_start_vertex(graph, {x, y} = vertex) do
-    graph = Graph.add_vertex(graph, vertex)
-    neighbors = Graph.neighbors(graph, vertex)
-
-    {graph, outbound} =
-      neighbors
-      |> Enum.reduce({graph, []}, fn {neighbor_x, neighbor_y} = neighbor, {graph, acc} ->
-        graph = Graph.add_edge(graph, vertex, neighbor)
-
-        acc =
-          if neighbor_y == y do
-            if neighbor_x < x, do: [:left | acc], else: [:right | acc]
-          else
-            if neighbor_y < y, do: [:up | acc], else: [:down | acc]
-          end
-
-        {graph, acc}
+  defp add_start_vertex(graph, {start_x, start_y} = start) do
+    start_label =
+      :digraph.in_neighbours(graph, start)
+      |> Enum.map(fn {x, y} ->
+        if start_y == y do
+          if start_x < x, do: :right, else: :left
+        else
+          if start_y < y, do: :down, else: :up
+        end
       end)
+      |> MapSet.new()
 
-    cond do
-      Enum.all?(outbound, &(&1 in [:left, :up])) ->
-        Graph.label_vertex(graph, vertex, :upleft)
+    :digraph.add_vertex(graph, start, start_label)
 
-      Enum.all?(outbound, &(&1 in [:right, :up])) ->
-        Graph.label_vertex(graph, vertex, :upright)
-
-      Enum.all?(outbound, &(&1 in [:left, :down])) ->
-        Graph.label_vertex(graph, vertex, :downleft)
-
-      Enum.all?(outbound, &(&1 in [:right, :down])) ->
-        Graph.label_vertex(graph, vertex, :downright)
-    end
+    # flip one edge around so starting vertex has one ingress and one egress
+    [edge | _] = :digraph.in_edges(graph, start)
+    {_, neighbor, _, _} = :digraph.edge(graph, edge)
+    :digraph.del_edge(graph, edge)
+    :digraph.add_edge(graph, start, neighbor)
   end
 end
