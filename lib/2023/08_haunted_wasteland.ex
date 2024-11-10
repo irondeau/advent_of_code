@@ -3,8 +3,6 @@ defmodule AdventOfCode.Y2023.D8 do
 
   import AdventOfCode.Helpers.Math
 
-  alias AdventOfCode.Helpers.DirectedGraph
-
   @impl true
   def title, do: "Haunted Wasteland"
 
@@ -18,15 +16,18 @@ defmodule AdventOfCode.Y2023.D8 do
   def parse(input) do
     [instr, network] = String.split(input, ~r/\R\R/, parts: 2)
 
-    graph =
-      network
-      |> String.split(~r/\R/)
-      |> Enum.map(&String.split(&1, ~r/[=(,) ]+/, trim: true))
-      |> Enum.reduce(DirectedGraph.new(), fn [node, left, right], graph ->
-        graph
-        |> DirectedGraph.add_edge(node, left, label: :left)
-        |> DirectedGraph.add_edge(node, right, label: :right)
-      end)
+    graph = :digraph.new()
+
+    network
+    |> String.split(~r/\R/)
+    |> Enum.map(&String.split(&1, ~r/[=(,) ]+/, trim: true))
+    |> Enum.each(fn [node, left, right] ->
+      :digraph.add_vertex(graph, node)
+      :digraph.add_vertex(graph, left)
+      :digraph.add_vertex(graph, right)
+      :digraph.add_edge(graph, node, left, :left)
+      :digraph.add_edge(graph, node, right, :right)
+    end)
 
     instr =
       instr
@@ -42,7 +43,7 @@ defmodule AdventOfCode.Y2023.D8 do
 
   defp solve_2({graph, instr}) do
     graph
-    |> DirectedGraph.vertices()
+    |> :digraph.vertices()
     |> Enum.filter(&(String.last(&1) == "A"))
     |> Enum.map(fn node ->
       traverse_2(graph, instr, node)
@@ -57,9 +58,10 @@ defmodule AdventOfCode.Y2023.D8 do
     node =
       Enum.reduce(instr, node, fn direction, current_node ->
         graph
-        |> DirectedGraph.out_edges(current_node)
-        |> Enum.find(fn {_, edge} -> edge.label == direction end)
-        |> then(fn {_, edge} -> edge.v2 end)
+        |> :digraph.out_edges(current_node)
+        |> Enum.map(&:digraph.edge(graph, &1))
+        |> Enum.find(fn {_, _v1, _v2, label} -> label == direction end)
+        |> elem(2)
       end)
 
     traverse_1(graph, instr, node, acc + length(instr))
@@ -72,9 +74,10 @@ defmodule AdventOfCode.Y2023.D8 do
       node =
         Enum.reduce(instr, node, fn direction, current_node ->
           graph
-          |> DirectedGraph.out_edges(current_node)
-          |> Enum.find(fn {_, edge} -> edge.label == direction end)
-          |> then(fn {_, edge} -> edge.v2 end)
+          |> :digraph.out_edges(current_node)
+          |> Enum.map(&:digraph.edge(graph, &1))
+          |> Enum.find(fn {_, _v1, _v2, label} -> label == direction end)
+          |> elem(2)
         end)
 
       traverse_2(graph, instr, node, acc + length(instr))

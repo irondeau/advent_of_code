@@ -25,8 +25,6 @@ defmodule AdventOfCodeTest.Y2023.D25Test do
 #     assert 54 = Puzzle.run(@wiring_diagram)
 #   end
 
-  @tag :slow
-  @tag timeout: 300_000
   test "solution" do
     assert 545528 = Puzzle.run()
   end
