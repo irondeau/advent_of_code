@@ -20,7 +20,6 @@ defmodule AdventOfCode.MixProject do
   defp deps do
     [
       {:exla, "~> 0.5.3"},
-      {:libgraph, "~> 0.16.0"},
       {:nx, "~> 0.5.3"}
     ]
   end
