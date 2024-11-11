@@ -1,8 +1,7 @@
 defmodule AdventOfCode.Y2023.D23 do
   use AdventOfCode.Puzzle, year: 2023, day: 23
 
-  require IEx
-  alias AdventOfCode.Helpers.DirectedGraph
+  alias AdventOfCode.Helpers.Digraph
 
   @impl true
   def title, do: "A Long Walk"
@@ -53,42 +52,57 @@ defmodule AdventOfCode.Y2023.D23 do
     {flat_path, sloped_path} =
       Map.split_with(path, &(elem(&1, 1) == "."))
 
-    graph =
-      DirectedGraph.new()
-      |> DirectedGraph.add_vertices(Map.keys(flat_path))
-      |> add_path(flat_path)
-      |> DirectedGraph.add_vertices(Map.keys(sloped_path))
-      |> add_path(sloped_path)
-      |> reduce()
+    graph = :digraph.new()
 
-    DirectedGraph.get_paths(graph, start, stop)
-    |> Enum.map(fn path ->
-      get_in(Map.to_list(path), [Access.all(), Access.elem(1), Access.key!(:weight)])
-      |> Enum.sum()
+    Enum.each(flat_path, fn {vertex, char} ->
+      :digraph.add_vertex(graph, vertex, char)
     end)
-    |> Enum.max()
+
+    add_path(graph, flat_path)
+
+    Enum.each(sloped_path, fn {vertex, char} ->
+      :digraph.add_vertex(graph, vertex, char)
+    end)
+
+    add_path(graph, sloped_path)
+
+    reduce(graph)
+
+    solve(graph, start, stop)
   end
 
   defp solve_2({path, start, stop}) do
     path =
       Map.new(path, fn {{x, y}, _char} -> {{x, y}, "."} end)
 
-    graph =
-      DirectedGraph.new()
-      |> DirectedGraph.add_vertices(Map.keys(path))
-      |> add_path(path)
-      |> reduce()
+    graph = :digraph.new()
 
-    DirectedGraph.get_paths(graph, start, stop)
+    Enum.each(path, fn {vertex, char} ->
+      :digraph.add_vertex(graph, vertex, char)
+    end)
+
+    add_path(graph, path)
+
+    reduce(graph)
+
+    solve(graph, start, stop)
+  end
+
+  defp solve(graph, start, stop) do
+    get_paths(graph, start, stop)
     |> Enum.map(fn path ->
-      get_in(Map.to_list(path), [Access.all(), Access.elem(1), Access.key!(:weight)])
+      get_in(path, [Access.all(), Access.elem(3), Access.key!(:weight)])
       |> Enum.sum()
     end)
     |> Enum.max()
   end
 
   defp add_path(graph, path) do
-    DirectedGraph.add_edges(graph, Enum.flat_map(path, &map_step/1), add_vertices: false)
+    path
+    |> Enum.flat_map(&map_step/1)
+    |> Enum.each(fn {v1, v2} ->
+      :digraph.add_edge(graph, v1, v2, %{weight: 1})
+    end)
   end
 
   defp map_step({{x, y}, "."}),
@@ -105,27 +119,38 @@ defmodule AdventOfCode.Y2023.D23 do
   defp map_step({{x, y}, "<"}), do: [{{x + 1, y}, {x, y}}, {{x, y}, {x - 1, y}}]
 
   defp reduce(graph) do
-    graph
-    |> DirectedGraph.vertices()
-    |> Enum.reduce(graph, fn vertex, graph ->
-      out_edges = DirectedGraph.out_edges(graph, vertex)
+    vertices = :digraph.vertices(graph)
 
-      if map_size(out_edges) == 2 and length(DirectedGraph.neighbors(graph, vertex)) == 2 do
-        [v1, v2] =
-          Enum.map(out_edges, & elem(&1, 1).v2)
+    Enum.each(vertices, fn vertex ->
+      if :digraph.out_degree(graph, vertex) == 2 and length(Digraph.neighbours(graph, vertex)) == 2 do
+        [{_, _, v1, %{weight: w1}}, {_, _, v2, %{weight: w2}}] =
+          :digraph.out_edges(graph, vertex)
+          |> Enum.map(&:digraph.edge(graph, &1))
 
-        combined_weight =
-          out_edges
-          |> Enum.map(& elem(&1, 1).weight)
-          |> Enum.sum()
-
-        graph
-        |> DirectedGraph.delete_vertex(vertex)
-        |> DirectedGraph.add_edge(v1, v2, weight: combined_weight)
-        |> DirectedGraph.add_edge(v2, v1, weight: combined_weight)
-      else
-        graph
+        :digraph.del_vertex(graph, vertex)
+        :digraph.add_edge(graph, v1, v2, %{weight: w1 + w2})
+        :digraph.add_edge(graph, v2, v1, %{weight: w1 + w2})
       end
+    end)
+  end
+
+  defp get_paths(graph, v1, v2), do: get_paths(graph, v2, [{v1, []}], [])
+
+  defp get_paths(_graph, _v2, [], paths), do: paths
+
+  defp get_paths(graph, v2, [{vertex, visited} | unvisited], paths) when vertex == v2 do
+    get_paths(graph, v2, unvisited, [visited | paths])
+  end
+
+  defp get_paths(graph, v2, [{vertex, visited} | unvisited], paths) do
+    :digraph.out_edges(graph, vertex)
+    |> Enum.map(&:digraph.edge(graph, &1))
+    |> Enum.reject(fn {_, _, v2, _} ->
+      Enum.any?(visited, &match?({_, ^v2, _, _}, &1))
+    end)
+    |> Enum.map(&{elem(&1, 2), [&1 | visited]})
+    |> then(fn to_visit ->
+      get_paths(graph, v2, to_visit ++ unvisited, paths)
     end)
   end
 end

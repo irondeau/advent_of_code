@@ -34,7 +34,7 @@ defmodule AdventOfCodeTest.Y2023.D23Test do
   end
 
   @tag :slow
-  @tag timeout: 500_000
+  @tag timeout: 70_000
   test "solution" do
     assert {2070, 6498} = Puzzle.run()
   end
