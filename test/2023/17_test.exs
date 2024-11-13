@@ -19,16 +19,24 @@ defmodule AdventOfCodeTest.Y2023.D17Test do
 4322674655533
 """
 
+  @ultra_crucible_map """
+111111111111
+999999999991
+999999999991
+999999999991
+999999999991
+"""
+
   test "part 1 examples" do
-    # should be 102
-    assert {nil, _} = Puzzle.run(@crucible_map)
+    assert {102, 94} = Puzzle.run(@crucible_map)
   end
 
   test "part 2 examples" do
-    assert {_, nil} = Puzzle.run("")
+    assert {_, 71} = Puzzle.run(@ultra_crucible_map)
   end
 
+  @tag :slow
   test "solution" do
-    assert {nil, nil} = Puzzle.run()
+    assert {742, 918} = Puzzle.run()
   end
 end

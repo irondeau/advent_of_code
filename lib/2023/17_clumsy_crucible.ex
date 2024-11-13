@@ -1,14 +1,7 @@
 defmodule AdventOfCode.Y2023.D17 do
   use AdventOfCode.Puzzle, year: 2023, day: 17
 
-  # Disclaimer: I gave up on this problem because Elixir does not have a priority queue
-  # which I can use to solve this problem. I tried utilizing the implementation that
-  # the Graph library provides, but there is no way to check if an item has already
-  # been added to the queue.
-  #
-  # The problem I faced when I finally gave up was that multiple v2 vertices were being
-  # added to the priority queue for the pathfinding algorithm, making the path from any
-  # vertex to the root of the generated tree uncertain.
+  alias AdventOfCode.Helpers.PQ
 
   @impl true
   def title, do: "Clumsy Crucible"
@@ -21,148 +14,97 @@ defmodule AdventOfCode.Y2023.D17 do
 
   @impl true
   def parse(input) do
-    map =
-      input
-      |> String.split(~r/\R/)
-      |> Enum.map(fn line ->
-        line
-        |> String.graphemes()
-        |> Enum.map(&String.to_integer/1)
+    lines = String.split(input, ~r/\R/)
+
+    graph = :digraph.new()
+
+    # build vertices
+    lines
+    |> Enum.with_index()
+    |> Enum.each(fn {line, y} ->
+      line
+      |> String.graphemes()
+      |> Enum.with_index()
+      |> Enum.each(fn {char, x} ->
+        :digraph.add_vertex(graph, {x, y}, String.to_integer(char))
       end)
+    end)
 
-    dst = {hd(map) |> length(), length(map)}
+    # build edges
+    :digraph.vertices(graph)
+    |> Enum.map(&:digraph.vertex(graph, &1))
+    |> Enum.each(fn {{x, y}, heat} ->
+      :digraph.add_edge(graph, {x, y + 1}, {x, y}, %{heat: heat, direction: :up})
+      :digraph.add_edge(graph, {x, y - 1}, {x, y}, %{heat: heat, direction: :down})
+      :digraph.add_edge(graph, {x + 1, y}, {x, y}, %{heat: heat, direction: :left})
+      :digraph.add_edge(graph, {x - 1, y}, {x, y}, %{heat: heat, direction: :right})
+    end)
 
-    # graph =
-    #   input
-    #   |> Enum.with_index()
-    #   |> Enum.reduce(Graph.new(), fn {line, y}, graph ->
-    #     line
-    #     |> Enum.with_index()
-    #     |> Enum.reduce(graph, fn {weight, x}, graph ->
-    #       graph
-    #       |> Graph.add_vertex({x, y})
-    #       |> Graph.add_edges(edges({x, y}, String.to_integer(weight)))
-    #     end)
-    #   end)
-    #   |> Graph.add_vertex(dst)
-    #   |> Graph.add_edge({dst_x - 1, dst_y - 1}, dst,
-    #     weight: get_in(input, [Access.at(dst_y - 1), Access.at(dst_x - 1)]) |> String.to_integer()
-    #   )
-
-    {map, dst}
+    {graph, {0, 0}, :digraph.vertices(graph) |> Enum.max()}
   end
 
-  defp solve_1({_map, _dst}) do
-    # graph
-    # |> pathfind({0, 0}, dst, fn tree, %Edge{v1: v1, v2: v2} = edge ->
-    #   path_vertices =
-    #     tree
-    #     |> Graph.add_vertex(v2)
-    #     |> Graph.add_edge(v2, v1)
-    #     |> build_path(edge)
-    #     |> Enum.reduce([], fn edge, vertices ->
-    #       [edge.v1 | [edge.v2 | vertices]]
-    #     end)
-    #     |> Enum.uniq()
+  defp solve_1({graph, start, stop}) do
+    path_fn =
+      fn d1, d2, count ->
+        d1 != d2 or count < 3
+      end
 
-    #   path_vertices
-    #   |> Enum.unzip()
-    #   |> Tuple.to_list()
-    #   |> Enum.map(fn axis ->
-    #     axis
-    #     |> Enum.chunk_every(2, 1, :discard)
-    #     |> Enum.reduce_while(1, fn [a, b], acc ->
-    #       if a == b do
-    #         {:cont, acc + 1}
-    #       else
-    #         {:halt, acc}
-    #       end
-    #     end)
-    #   end)
-    #   |> Enum.max()
-    #   |> Kernel.>=(4)
-    # end)
-    # |> Enum.map(& &1.weight)
-    # |> Enum.sum()
-
-    nil
+    pathfind(graph, start, stop, path_fn)
   end
 
-  defp solve_2(_input) do
-    nil
+  defp solve_2({graph, start, stop}) do
+    path_fn =
+      fn d1, d2, count ->
+        :start in [d1, d2] or (count < 4 and d1 == d2) or (count >= 4 and count <= 10)
+      end
+
+    valid_fn =
+      fn count ->
+        (count >= 4 and count <= 10)
+      end
+
+    pathfind(graph, start, stop, path_fn, valid_fn)
   end
 
-  # defp edges({x, y} = vertex, weight) do
-  #   [
-  #     Edge.new(vertex, {x, y - 1}, weight: weight),
-  #     Edge.new(vertex, {x, y + 1}, weight: weight),
-  #     Edge.new(vertex, {x - 1, y}, weight: weight),
-  #     Edge.new(vertex, {x + 1, y}, weight: weight)
-  #   ]
-  # end
+  defp pathfind(graph, start, stop, path_fn, valid_fn \\ fn _count -> true end) when is_tuple(start) and is_tuple(stop) and is_function(path_fn, 3) do
+    pq =
+      PQ.new(fn {_v1, h1, _d1, _c1}, {_v2, h2, _d2, _c2,} -> h1 < h2 end)
+      |> PQ.push({start, 0, :start, 0})
 
-  # defp pathfind(graph, a, b, reject_fun) do
-  #   tree = Graph.new() |> Graph.add_vertex(a)
+    pathfind(graph, stop, pq, MapSet.new(), path_fn, valid_fn)
+  end
 
-  #   queue =
-  #     graph
-  #     |> Graph.out_edges(a)
-  #     |> Enum.reduce(PriorityQueue.new(), fn edge, queue ->
-  #       PriorityQueue.push(queue, {edge, edge.weight}, edge.weight)
-  #     end)
+  def pathfind(graph, stop, pq, visited, path_fn, valid_fn) when is_tuple(stop) and is_function(path_fn, 3) do
+    with {{vertex, heat, direction, count}, pq} <- PQ.pop(pq) do
+      if MapSet.member?(visited, {vertex, direction, count}) do
+        pathfind(graph, stop, pq, visited, path_fn, valid_fn)
+      else
+        if vertex == stop and valid_fn.(count) do
+          heat
+        else
+          visited = MapSet.put(visited, {vertex, direction, count})
 
-  #   search(queue, graph, b, tree, reject_fun)
-  # end
+          pq =
+            :digraph.out_edges(graph, vertex)
+            |> Enum.map(&:digraph.edge(graph, &1))
+            |> Enum.reject(fn {_, _, _, %{direction: d2}} ->
+              (direction == :up and d2 == :down)
+              or (direction == :down and d2 == :up)
+              or (direction == :left and d2 == :right)
+              or (direction == :right and d2 == :left)
+            end)
+            |> Enum.reduce(pq, fn {_, _, v2, %{heat: h2, direction: d2}}, pq ->
+              if path_fn.(direction, d2, count) do
+                count = if d2 == direction, do: count + 1, else: 1
+                PQ.push(pq, {v2, heat + h2, d2, count})
+              else
+                pq
+              end
+            end)
 
-  # defp search(queue, graph, target_vertex, tree, reject_fun) do
-  #   case PriorityQueue.pop(queue) do
-  #     {{:value, {%Edge{v1: v1, v2: ^target_vertex} = edge, _}}, _queue} ->
-  #       tree
-  #       |> Graph.add_vertex(target_vertex)
-  #       |> Graph.add_edge(target_vertex, v1, weight: edge.weight)
-  #       |> build_path(edge)
-
-  #     {{:value, {%Edge{v1: v1, v2: v2, weight: weight} = edge, acc_weight}}, queue} ->
-  #       if edge in Graph.edges(tree) do
-  #         search(queue, graph, target_vertex, tree, reject_fun)
-  #       else
-  #         case Graph.out_edges(graph, v2) do
-  #           nil ->
-  #             search(queue, graph, target_vertex, tree, reject_fun)
-
-  #           v2_out ->
-  #             tree =
-  #               tree
-  #               |> Graph.add_vertex(v2)
-  #               |> Graph.add_edge(v2, v1, weight: weight)
-
-  #             # if {4, 2} in get_in(v2_out, [Access.all(), Access.key!(:v2)]), do: pry()
-
-  #             queue =
-  #               v2_out
-  #               |> Enum.reject(fn %Edge{v2: v2} -> v2 in Graph.vertices(tree) end)
-  #               |> Enum.reject(fn edge -> edge in get_in(queue, [Access.key!(:priorities), Access.elem(0)]) end)
-  #               |> Enum.reject(fn edge -> reject_fun.(tree, edge) end)
-  #               |> Enum.reduce(queue, fn edge, queue ->
-  #                 PriorityQueue.push(queue, {edge, acc_weight + edge.weight}, edge.weight)
-  #               end)
-
-  #             search(queue, graph, target_vertex, tree, reject_fun)
-  #         end
-  #       end
-
-  #     {{:empty, _}} ->
-  #       raise ArgumentError
-  #   end
-  # end
-
-  # def build_path(tree, %Edge{v2: v2}, path \\ []) do
-  #   case Graph.out_edges(tree, v2) do
-  #     [] ->
-  #       path
-
-  #     [edge] ->
-  #       build_path(tree, edge, [edge | path])
-  #   end
-  # end
+          pathfind(graph, stop, pq, visited, path_fn, valid_fn)
+        end
+      end
+    end
+  end
 end
