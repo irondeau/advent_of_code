@@ -4,8 +4,6 @@ defmodule AdventOfCode.Y2015.D13 do
   alias AdventOfCode.Helpers
   alias AdventOfCode.Helpers.Digraph
 
-  require IEx
-
   @impl true
   def title, do: "Knights of the Dinner Table"
 
