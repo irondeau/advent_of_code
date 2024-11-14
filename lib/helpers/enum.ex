@@ -9,4 +9,15 @@ defmodule AdventOfCode.Helpers.Enum do
     end)
     |> is_boolean()
   end
+
+  def permutations(enumerable), do: permutations(enumerable, length(enumerable))
+
+  def permutations(_enumerable, 0), do: [[]]
+
+  def permutations(enumerable, cardinality) when is_integer(cardinality) do
+    k = min(cardinality, length(enumerable))
+    for x <- enumerable, y <- permutations(enumerable -- [x], k - 1) do
+      [x | y]
+    end
+  end
 end

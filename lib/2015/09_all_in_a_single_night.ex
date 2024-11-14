@@ -6,11 +6,10 @@ defmodule AdventOfCode.Y2015.D9 do
 
   @impl true
   def solve(input) do
-    input
-    |> build_graph()
-    |> then(&({solve_1(&1), solve_2(&1)}))
+    graph = build_graph(input)
+    {solve_1(graph), solve_2(graph)}
   end
-  
+
   @impl true
   def parse(input) do
     input

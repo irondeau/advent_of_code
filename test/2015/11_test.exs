@@ -4,7 +4,7 @@ defmodule AdventOfCodeTest.Y2015.D11Test do
   alias AdventOfCode.Y2015.D11, as: Puzzle
 
   @tag :slow
-  test "part 1 examples" do
+  test "examples" do
     assert {"abcdffaa", _} = Puzzle.run("abcdefgh")
     assert {"ghjaabcc", _} = Puzzle.run("ghijklmn")
   end

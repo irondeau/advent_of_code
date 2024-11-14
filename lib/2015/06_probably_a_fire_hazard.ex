@@ -8,8 +8,7 @@ defmodule AdventOfCode.Y2015.D6 do
 
   @impl true
   def solve(input) do
-    input
-    |> then(&({solve_1(&1), solve_2(&1)}))
+    {solve_1(input), solve_2(input)}
   end
 
   @impl true

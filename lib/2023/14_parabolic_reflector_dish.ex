@@ -8,8 +8,7 @@ defmodule AdventOfCode.Y2023.D14 do
   def solve(input) do
     :ets.new(:rock_cache, [:named_table])
 
-    input
-    |> then(&({solve_1(&1), solve_2(&1)}))
+    {solve_1(input), solve_2(input)}
   end
 
   @impl true

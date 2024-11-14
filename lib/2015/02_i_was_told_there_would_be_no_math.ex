@@ -6,8 +6,7 @@ defmodule AdventOfCode.Y2015.D2 do
 
   @impl true
   def solve(input) do
-    input
-    |> then(&({solve_pt_1(&1), solve_pt_2(&1)}))
+    {solve_1(input), solve_2(input)}
   end
 
   @impl true
@@ -20,7 +19,7 @@ defmodule AdventOfCode.Y2015.D2 do
     end)
   end
 
-  defp solve_pt_1(dims) do
+  defp solve_1(dims) do
     dims
     |> Enum.reduce(0, fn %{"l" => l, "w" => w, "h" => h}, acc ->
       face_dims = [l*w, w*h, h*l]
@@ -28,7 +27,7 @@ defmodule AdventOfCode.Y2015.D2 do
     end)
   end
 
-  defp solve_pt_2(dims) do
+  defp solve_2(dims) do
     dims
     |> Enum.reduce(0, fn %{"l" => l, "w" => w, "h" => h}, acc ->
       face_perims = [2*(l+w), 2*(w+h), 2*(h+l)]

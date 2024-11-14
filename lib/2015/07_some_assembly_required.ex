@@ -6,11 +6,8 @@ defmodule AdventOfCode.Y2015.D7 do
 
   @impl true
   def solve(input) do
-    input
-    |> then(fn wire_map ->
-      sol_1 = solve_1(wire_map)
-      {sol_1, solve_2(wire_map, sol_1)}
-    end)
+    sol_1 = solve_1(input)
+    {sol_1, solve_2(input, sol_1)}
   end
 
   @impl true

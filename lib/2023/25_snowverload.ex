@@ -23,8 +23,7 @@ defmodule AdventOfCode.Y2023.D25 do
     |> Enum.take(3)
     |> Enum.each(fn edge ->
       [v1, v2] = MapSet.to_list(edge)
-      Digraph.del_edge(graph, v1, v2)
-      Digraph.del_edge(graph, v2, v1)
+      Digraph.del_edges(graph, v1, v2)
     end)
 
     :digraph_utils.components(graph)

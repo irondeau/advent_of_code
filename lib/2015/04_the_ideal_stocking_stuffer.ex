@@ -6,8 +6,7 @@ defmodule AdventOfCode.Y2015.D4 do
 
   @impl true
   def solve(input) do
-    input
-    |> then(&({solve_1(&1), solve_2(&1)}))
+    {solve_1(input), solve_2(input)}
   end
 
   defp solve_1(key) do
@@ -20,7 +19,7 @@ defmodule AdventOfCode.Y2015.D4 do
 
   defp satisfy(_str, "00000" <> _, n), do: n - 1
   defp satisfy(str, _hash, n), do: satisfy(str, hash(str <> Integer.to_string(n)), n + 1)
-  
+
   defp satisfy2(_str, "000000" <> _, n), do: n - 1
   defp satisfy2(str, _hash, n), do: satisfy2(str, hash(str <> Integer.to_string(n)), n + 1)
 
