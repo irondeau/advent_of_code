@@ -1,8 +1,6 @@
 defmodule AdventOfCode.Y2015.D15 do
   use AdventOfCode.Puzzle, year: 2015, day: 15
 
-  require IEx
-
   @num_tsp 100
   @calorie_req 500
 
