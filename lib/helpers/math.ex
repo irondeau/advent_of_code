@@ -3,6 +3,14 @@ defmodule AdventOfCode.Helpers.Math do
   Mathematical helper functions which extend Elixir's standard library.
   """
 
+  @spec divisors(integer()) :: [integer()]
+  def divisors(n) do
+    1..ceil(:math.sqrt(n))
+    |> Enum.filter(fn i -> rem(n, i) == 0 end)
+    |> Enum.flat_map(fn i -> [i, div(n, i)] end)
+    |> Enum.uniq()
+  end
+
   @spec gcd(integer(), integer()) :: non_neg_integer()
   def gcd(a, 0), do: abs(a)
   def gcd(0, b), do: abs(b)
