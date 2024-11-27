@@ -11,6 +11,13 @@ defmodule AdventOfCode.Helpers.Math do
     |> Enum.uniq()
   end
 
+  @spec factorial(non_neg_integer()) :: non_neg_integer()
+  def factorial(0), do: 1
+
+  def factorial(n) when n > 0 do
+    Enum.reduce(1..n, &*/2)
+  end
+
   @spec gcd(integer(), integer()) :: non_neg_integer()
   def gcd(a, 0), do: abs(a)
   def gcd(0, b), do: abs(b)
