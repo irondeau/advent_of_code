@@ -11,60 +11,40 @@ defmodule AdventOfCode.Y2023.D1 do
 
   @impl true
   def parse(input) do
-    input
-    |> String.split("\n")
+    String.split(input, ~r/\R/)
   end
 
-  defp solve_1(input) do
+  defp solve_1(input, opts \\ [alphanumeric: false]) do
     input
     |> Enum.reduce(0, fn line, acc ->
-      digits = get_digits(line)
+      digits = get_digits(line, opts)
       acc + List.first(digits) * 10 + List.last(digits)
     end)
   end
 
   defp solve_2(input) do
-    input
-    |> Enum.reduce(0, fn line, acc ->
-      digits = get_digits(line, alphanumeric: true)
-      acc + List.first(digits) * 10 + List.last(digits)
-    end)
+    solve_1(input, alphanumeric: true)
   end
 
-  defp get_digits(line, opts \\ [alphanumeric: false])
-
   defp get_digits(line, alphanumeric: true) do
-    Enum.reduce(0..(String.length(line) - 1), [], fn i, acc ->
-      slice = String.slice(line, i..-1)
-
+    line
+    |> Stream.unfold(fn
+      "" -> nil
+      str -> {str, String.slice(str, 1..-1//1)}
+    end)
+    |> Enum.reduce([], fn slice, acc ->
       case to_digit(slice) do
-        integer when is_integer(integer) ->
-          [integer | acc]
-
-        nil ->
-          char = String.at(slice, 0)
-
-          if String.match?(char, ~r/\d/) do
-            [String.to_integer(char) | acc]
-          else
-            acc
-          end
+        n when is_integer(n) -> [n | acc]
+        nil -> acc
       end
     end)
     |> Enum.reverse()
   end
 
   defp get_digits(line, alphanumeric: false) do
-    line
-    |> String.graphemes()
-    |> Enum.reduce([], fn char, acc ->
-      if String.match?(char, ~r/\d/) do
-        [String.to_integer(char) | acc]
-      else
-        acc
-      end
-    end)
-    |> Enum.reverse()
+    Regex.scan(~r/\d/, line)
+    |> List.flatten()
+    |> Enum.map(&String.to_integer/1)
   end
 
   defp to_digit("one" <> _), do: 1
@@ -76,5 +56,6 @@ defmodule AdventOfCode.Y2023.D1 do
   defp to_digit("seven" <> _), do: 7
   defp to_digit("eight" <> _), do: 8
   defp to_digit("nine" <> _), do: 9
+  defp to_digit(<<c>> <> _) when c in ?0..?9, do: String.to_integer(<<c>>)
   defp to_digit(_), do: nil
 end
