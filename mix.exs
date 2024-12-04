@@ -19,9 +19,9 @@ defmodule AdventOfCode.MixProject do
 
   defp deps do
     [
-      {:exla, "~> 0.5.3"},
+      {:exla, "~> 0.9.2"},
       {:jason, "~> 1.4"},
-      {:nx, "~> 0.5.3"}
+      {:nx, "~> 0.9.2"}
     ]
   end
 end
