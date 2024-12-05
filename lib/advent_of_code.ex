@@ -4,7 +4,7 @@ defmodule AdventOfCode do
   """
 
   @first_year 2015
-  @last_year 2023
+  @last_year 2024
 
   @first_day 1
   @last_day 25
