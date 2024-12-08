@@ -10,6 +10,13 @@ defmodule AdventOfCode.Helpers.Enum do
     |> is_boolean()
   end
 
+  def combinations(_enumerable, 0), do: [[]]
+  def combinations([], _), do: []
+
+  def combinations([head | tail], cardinality) do
+    (for sub <- combinations(tail, cardinality - 1), do: [head | sub]) ++ combinations(tail, cardinality)
+  end
+
   def permutations(enumerable), do: permutations(enumerable, length(enumerable))
 
   def permutations(_enumerable, 0), do: [[]]
