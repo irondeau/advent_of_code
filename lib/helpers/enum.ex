@@ -3,13 +3,6 @@ defmodule AdventOfCode.Helpers.Enum do
   Enumerable helper functions which extend Elixir's standard library.
   """
 
-  def has_dup?(enumerable) do
-    Enum.reduce_while(enumerable, [], fn x, acc ->
-      if x in acc, do: {:halt, false}, else: {:cont, [x | acc]}
-    end)
-    |> is_boolean()
-  end
-
   def combinations(_enumerable, 0), do: [[]]
   def combinations([], _), do: []
 
