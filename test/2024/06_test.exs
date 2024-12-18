@@ -20,6 +20,7 @@ defmodule AdventOfCodeTest.Y2024.D6Test do
     assert {41, 6} = Puzzle.run(@guard_map)
   end
 
+  @tag :slow
   test "solution" do
     assert {5516, 2008} = Puzzle.run()
   end
