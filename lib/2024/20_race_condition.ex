@@ -1,9 +1,9 @@
 defmodule AdventOfCode.Y2024.D20 do
   use AdventOfCode.Puzzle, year: 2024, day: 20
 
-  alias AdventOfCode.Helpers.Digraph
-
   @timesave 100
+  @max_cheat_1 2
+  @max_cheat_2 20
 
   @impl true
   def title, do: "Race Condition"
@@ -15,105 +15,64 @@ defmodule AdventOfCode.Y2024.D20 do
 
   @impl true
   def parse(input) do
-    racetrack = :digraph.new()
-
-    # add vertices
-    input
-    |> String.split(~r/\R/)
-    |> Enum.with_index()
-    |> Enum.each(fn {line, y} ->
-      line
-      |> String.graphemes()
+    {vs, start} =
+      input
+      |> String.split(~r/\R/)
       |> Enum.with_index()
-      |> Enum.each(fn
-        {"#", _x} -> nil
-        {char, x} -> :digraph.add_vertex(racetrack, {x, y}, char)
-      end)
-    end)
-
-    # add edges
-    racetrack
-    |> :digraph.vertices()
-    |> Enum.each(fn v ->
-      Digraph.add_edges(racetrack, edges(v))
-    end)
-
-    start =
-      racetrack
-      |> :digraph.vertices()
-      |> Enum.map(&:digraph.vertex(racetrack, &1))
-      |> Enum.find_value(fn
-        {vertex, "S"} -> vertex
-        _ -> false
+      |> Enum.reduce({MapSet.new(), nil}, fn {line, y}, {vs, start} ->
+        line
+        |> String.graphemes()
+        |> Enum.with_index()
+        |> Enum.reduce({vs, start}, fn
+          {"#", _x}, {vs, start} -> {vs, start}
+          {"S", x}, {vs, _start} -> {MapSet.put(vs, {x, y}), {x, y}}
+          {_char, x}, {vs, start} -> {MapSet.put(vs, {x, y}), start}
+        end)
       end)
 
-    weight_graph(racetrack, start)
-
-    racetrack
+    weight_track(vs, start)
   end
 
-  defp solve_1(racetrack) do
-    racetrack
-    |> :digraph.vertices()
-    |> Enum.map(fn {x, y} = v1 ->
-      [
-        {x, y - 2},
-        {x + 2, y},
-        {x, y + 2},
-        {x - 2, y}
-      ]
-      |> Enum.filter(fn v2 -> :digraph.vertex(racetrack, v2) end)
-      |> Enum.filter(fn v2 ->
-        {_, w1} = :digraph.vertex(racetrack, v1)
-        {_, w2} = :digraph.vertex(racetrack, v2)
-
-        w2 > w1 and w2 - w1 - 2 >= @timesave
-      end)
-      |> Enum.count()
-    end)
-    |> Enum.sum()
+  defp solve_1(track) do
+    race(track, @max_cheat_1)
   end
 
-  defp solve_2(racetrack) do
-    racetrack
-    |> :digraph.vertices()
-    |> Enum.map(fn {x1, y1} = v1 ->
-      racetrack
-      |> :digraph.vertices()
-      |> Enum.filter(fn {x2, y2} ->
-        abs(y2 - y1) + abs(x2 - x1) <= 20
-      end)
-      |> Enum.filter(fn {x2, y2} = v2 ->
-        {_, w1} = :digraph.vertex(racetrack, v1)
-        {_, w2} = :digraph.vertex(racetrack, v2)
-
-        w2 > w1 and w2 - w1 - abs(y2 - y1) - abs(x2 - x1) >= @timesave
-      end)
-      |> Enum.count()
-    end)
-    |> Enum.sum()
+  defp solve_2(track) do
+    race(track, @max_cheat_2)
   end
 
-  # relabel the graph with the weighted distance from the start vertex
-  defp weight_graph(graph, start, distance \\ 0, visited \\ MapSet.new()) do
-    :digraph.add_vertex(graph, start, distance)
+  defp race(track, max_cheat) do
+    for {v1, w1} <- track,
+        {v2, w2} <- track,
+        v1 != v2,
+        w2 > w1,
+        d = cheat_distance(v1, v2),
+        d <= max_cheat,
+        w2 - w1 - d >= @timesave,
+        reduce: 0 do
+      acc -> acc + 1
+    end
+  end
 
-    :digraph.out_edges(graph, start)
-    |> Enum.map(&:digraph.edge(graph, &1))
-    |> Enum.map(&elem(&1, 2))
-    |> Enum.filter(fn v ->
-      not MapSet.member?(visited, v)
-    end)
-    |> Enum.each(fn v ->
-      weight_graph(graph, v, distance + 1, MapSet.put(visited, start))
+  defp weight_track(vs, v, distance \\ 0, track \\ %{}) do
+    track = Map.put(track, v, distance)
+
+    adjacent(v)
+    |> Enum.filter(&MapSet.member?(vs, &1))
+    |> Enum.reject(&Map.has_key?(track, &1))
+    |> Enum.reduce(track, fn next, track ->
+      weight_track(vs, next, distance + 1, track)
     end)
   end
 
-  defp edges({x, y}),
+  defp adjacent({x, y}),
     do: [
-      [{x, y}, {x, y - 1}],
-      [{x, y}, {x + 1, y}],
-      [{x, y}, {x, y + 1}],
-      [{x, y}, {x - 1, y}]
+      {x, y - 1},
+      {x + 1, y},
+      {x, y + 1},
+      {x - 1, y}
     ]
+
+  defp cheat_distance({x1, y1}, {x2, y2}),
+    do: abs(y2 - y1) + abs(x2 - x1)
 end
