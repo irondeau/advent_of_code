@@ -20,7 +20,6 @@ defmodule AdventOfCodeTest.Y2024.D19Test do
     assert {6, 16} = Puzzle.run(@towel_designs)
   end
 
-  @tag :slow
   test "solution" do
     assert {300, 624802218898092} = Puzzle.run()
   end
