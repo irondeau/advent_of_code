@@ -33,4 +33,40 @@ defmodule AdventOfCode.Helpers.Digraph do
     |> Enum.uniq()
     |> Enum.reject(&(&1 == v))
   end
+
+  @spec cliques(:digraph.graph()) :: [MapSet.t(:digraph.vertex())]
+  def cliques(g) do
+    bron_kerbosch(g)
+  end
+
+  # the basic form of the Bron-Kerbosch algorithm (without pivoting)
+  defp bron_kerbosch(g) do
+    p = :digraph.vertices(g) |> MapSet.new()
+    bron_kerbosch(g, p)
+  end
+
+  defp bron_kerbosch(g, r \\ MapSet.new(), p, x \\ MapSet.new(), acc \\ []) do
+    if Enum.empty?(p) and Enum.empty?(x) do
+      [r | acc]
+    else
+      for v <- p, reduce: {r, p, x, acc} do
+        {r, p, x, acc} ->
+          n = neighbours(g, v) |> MapSet.new()
+          acc =
+            bron_kerbosch(
+              g,
+              MapSet.put(r, v),
+              MapSet.intersection(p, n),
+              MapSet.intersection(x, n)
+            )
+            |> Enum.concat(acc)
+
+          p = MapSet.delete(p, v)
+          x = MapSet.put(x, v)
+
+          {r, p, x, acc}
+      end
+      |> elem(3)
+    end
+  end
 end
