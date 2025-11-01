@@ -18,10 +18,10 @@ defmodule Mix.Tasks.Solve do
             Mix.shell().info("Result:\n\s\sPart 1: #{result_pt_1}\n\s\sPart 2: #{result_pt_2}")
           {:ok, result} ->
             Mix.shell().info("Result: #{result}")
-          {:error, :solution_out_of_bounds} ->
-            Mix.shell().error("Invalid date #{day}/#{year}. Date must match "
-              <> "#{AdventOfCode.first_year()} <= year <= #{AdventOfCode.last_year()} and "
-              <> "#{AdventOfCode.first_day()} <= day <= #{AdventOfCode.last_day}")
+          # {:error, :solution_out_of_bounds} ->
+          #   Mix.shell().error("Invalid date #{day}/#{year}. Date must match "
+          #     <> "#{AdventOfCode.first_year()} <= year <= #{AdventOfCode.last_year()} and "
+          #     <> "#{AdventOfCode.first_day()} <= day <= #{AdventOfCode.last_day}")
           {:error, :solution_not_found} ->
             Mix.shell().info("Solution for puzzle #{day}/#{year} has not yet been implemented")
         end

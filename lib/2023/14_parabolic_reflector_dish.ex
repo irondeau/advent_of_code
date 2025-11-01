@@ -119,7 +119,7 @@ defmodule AdventOfCode.Y2023.D14 do
 
   defp flip(rocks) do
     rocks
-    |> List.zip()
+    |> Enum.zip()
     |> Enum.map(&Tuple.to_list/1)
   end
 end

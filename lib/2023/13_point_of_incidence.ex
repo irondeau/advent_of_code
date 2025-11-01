@@ -73,7 +73,7 @@ defmodule AdventOfCode.Y2023.D13 do
 
   defp flip(pattern) do
     pattern
-    |> List.zip()
+    |> Enum.zip()
     |> Enum.map(&Tuple.to_list/1)
   end
 end

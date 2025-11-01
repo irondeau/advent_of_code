@@ -69,7 +69,7 @@ defmodule AdventOfCode.Y2023.D11 do
 
   defp flip(galaxies) do
     galaxies
-    |> List.zip()
+    |> Enum.zip()
     |> Enum.map(&Tuple.to_list/1)
   end
 

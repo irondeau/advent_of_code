@@ -42,7 +42,7 @@ defmodule AdventOfCode.Y2015.D17 do
         0..(length(containers) - 1)
         |> Enum.reduce(acc, fn index, acc ->
           next_container = Enum.fetch!(containers, index)
-          containers = Enum.slice(containers, (index + 1)..-1)
+          containers = Enum.slice(containers, (index + 1)..-1//1)
           fill_containers(containers, volume - next_container, [next_container | filled], acc)
         end)
     end

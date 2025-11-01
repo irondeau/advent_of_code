@@ -22,7 +22,7 @@ defmodule AdventOfCode.Y2023.D5 do
       maps
       |> String.split(~r/\R\R/, trim: true)
       |> Enum.map(fn category ->
-        Regex.named_captures(~r/(?<from>.*)-to-(?<to>.*) map:\R(?<map>[\R\d\s]*)/, category)
+        Regex.named_captures(~r/(?<from>.*)-to-(?<to>.*) map:\R(?<map>[\r\n\d\s]*)/, category)
         |> Map.update("map", nil, fn map ->
           map
           |> String.split(~r/\R/)
