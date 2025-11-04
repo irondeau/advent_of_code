@@ -3,6 +3,13 @@ defmodule AdventOfCode.Helpers.Digraph do
   Digraph helper functions to complement Erlang's built-in `:digraph` module
   """
 
+  @spec add_vertices(:digraph.graph(), list()) :: :ok
+  def add_vertices(g, vs) do
+    Enum.each(vs, fn v ->
+      apply(:digraph, :add_vertex, [g | v])
+    end)
+  end
+
   @spec add_edges(:digraph.graph(), list()) :: :ok
   def add_edges(g, es) do
     Enum.each(es, fn e ->
@@ -52,6 +59,7 @@ defmodule AdventOfCode.Helpers.Digraph do
       for v <- p, reduce: {r, p, x, acc} do
         {r, p, x, acc} ->
           n = neighbours(g, v) |> MapSet.new()
+
           acc =
             bron_kerbosch(
               g,
