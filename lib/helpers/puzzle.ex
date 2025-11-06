@@ -21,10 +21,11 @@ defmodule AdventOfCode.Puzzle do
       end
 
       def run(input) do
-        Logger.info("Year #{unquote(year)} Day #{String.pad_leading("#{unquote(day)}", 2, "0")}: #{title()}")
-        
+        Logger.info(
+          "Year #{unquote(year)} Day #{String.pad_leading("#{unquote(day)}", 2, "0")}: #{title()}"
+        )
+
         input
-        |> String.trim()
         |> parse()
         |> solve()
       end
