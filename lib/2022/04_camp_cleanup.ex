@@ -14,6 +14,7 @@ defmodule AdventOfCode.Y2022.D4 do
   @impl true
   def parse(input) do
     input
+    |> String.trim()
     |> String.split(~r/\R/)
     |> Enum.map(fn line ->
       line

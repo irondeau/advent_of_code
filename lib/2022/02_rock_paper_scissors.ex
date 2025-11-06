@@ -24,6 +24,7 @@ defmodule AdventOfCode.Y2022.D2 do
   @impl true
   def parse(input) do
     input
+    |> String.trim()
     |> String.split(~r/\R/)
     |> Enum.map(fn round ->
       round

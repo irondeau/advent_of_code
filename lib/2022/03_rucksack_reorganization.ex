@@ -12,6 +12,7 @@ defmodule AdventOfCode.Y2022.D3 do
   @impl true
   def parse(input) do
     input
+    |> String.trim()
     |> String.split(~r/\R/)
   end
 
