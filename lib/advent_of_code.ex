@@ -4,13 +4,13 @@ defmodule AdventOfCode do
   """
 
   @first_year 2015
-  @last_year 2024
+  @last_year 2025
 
   @first_day 1
   @last_day 25
 
-  @type year() :: unquote(@first_year) .. unquote(@last_year)
-  @type day() :: unquote(@first_day) .. unquote(@last_day)
+  @type year() :: unquote(@first_year)..unquote(@last_year)
+  @type day() :: unquote(@first_day)..unquote(@last_day)
 
   def first_year(), do: @first_year
   def last_year(), do: @last_year
