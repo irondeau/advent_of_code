@@ -10,6 +10,8 @@ defmodule Mix.Tasks.Solve do
 
   @impl Mix.Task
   def run(args) do
+    {:ok, _} = Application.ensure_all_started(:memoize)
+
     case Mix.AdventOfCode.parse(args) do
       {[help: true], _, _} ->
         Mix.shell().info("Usage: #{@usage}")
