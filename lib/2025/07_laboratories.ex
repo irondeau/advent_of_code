@@ -2,8 +2,6 @@ defmodule AdventOfCode.Y2025.D7 do
   use AdventOfCode.Puzzle, year: 2025, day: 7
   use Memoize
 
-  require IEx
-
   @impl true
   def title, do: "Laboratories"
 
