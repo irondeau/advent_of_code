@@ -22,7 +22,8 @@ defmodule AdventOfCode.MixProject do
       {:exla, "~> 0.10.0"},
       {:jason, "~> 1.4"},
       {:memoize, "~> 1.4"},
-      {:nx, "~> 0.10.0"}
+      {:nx, "~> 0.10.0"},
+      {:topo, "~> 1.0"}
     ]
   end
 end

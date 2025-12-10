@@ -19,6 +19,6 @@ defmodule AdventOfCodeTest.Y2025.D9Test do
   end
 
   test "solution" do
-    assert {4_748_985_168, nil} = Puzzle.run()
+    assert {4_748_985_168, 1_550_760_868} = Puzzle.run()
   end
 end
