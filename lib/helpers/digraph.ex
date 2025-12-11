@@ -6,7 +6,7 @@ defmodule AdventOfCode.Helpers.Digraph do
   @spec add_vertices(:digraph.graph(), list()) :: :ok
   def add_vertices(g, vs) do
     Enum.each(vs, fn v ->
-      apply(:digraph, :add_vertex, [g | v])
+      apply(:digraph, :add_vertex, [g, v])
     end)
   end
 
